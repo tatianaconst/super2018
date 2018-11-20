@@ -66,12 +66,12 @@ bool checkLU(const ComplexMatrix matrixBase, ComplexMatrix L,
 void func_for_n(uint num, uint gpu)
 {
 	ComplexMatrix matrixBase(num);
-	matrixBase.generate();
+	matrixBase.generate_magma_only();
 
 
-    matrixBase.print("matrixBase");
+    //matrixBase.print("matrixBase");
 
-	 ComplexMatrix matrixRes(matrixBase);
+    ComplexMatrix matrixRes(matrixBase);
 
 
 

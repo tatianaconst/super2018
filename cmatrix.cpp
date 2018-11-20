@@ -38,6 +38,28 @@ void ComplexMatrix::m_clean()
     delete []magma_array;
 }
 
+static double get_rand_val(alglib::ae_int_t seedl,
+				uint seedr,
+				alglib::hqrndstate state)
+{
+	alglib::hqrndseed(seed1, seedr, state);
+	return alglib::hqrnduniformr(state);
+}
+
+void ComplexMatrix::generate_magma_only()
+{
+	alglib::hqrndstate state;
+
+    // initialize
+    alglib::hqrndrandomize(state);
+    alglib::ae_int_t seed1 = time(0);
+	
+	for (uint i = 0; i < size(); ++i) {
+		magma_array[i].x = get_rand_val(seed1, 2 * i, state)
+		magma_array[i].y = get_rand_val(seed1, 2 * i  + 1, state)
+	}
+}
+
 void ComplexMatrix::generate()
 {
 	//printf("%d\n", m_n);

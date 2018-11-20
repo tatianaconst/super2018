@@ -31,6 +31,7 @@ public:
 	void print_alg(std::string s) const;
 
 	void generate();
+	void generate_magma_only();
 	void generate_test();
 	void copy(const ComplexMatrix &cm);
 

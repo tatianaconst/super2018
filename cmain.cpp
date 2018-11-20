@@ -88,7 +88,8 @@ void func_for_n(uint num, uint gpu)
 
 		magma_int_t func_result = magma_zgetrf_m (
 	        gpu, m, n, matrixRes.magma_array, lda, ipiv, &info);
-
+		if (func_result != MAGMA_SUCCESS)
+			continue;
 
 		double fin_time = magma_wtime();
 

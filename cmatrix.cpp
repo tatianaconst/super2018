@@ -21,19 +21,6 @@ ComplexMatrix::ComplexMatrix(const ComplexMatrix &m)
 }
 
 
-void ComplexMatrix::set_alg_array(const alglib::complex_2d_array &array)
-{
-
-    init(array.rows());
-
-    int offset = 0;
-    for (uint i = 0; i < m_n; ++i) {
-        const alglib::complex *row = array[i];
-        for (uint j = 0; j < m_n; ++j)
-            magma_array[offset++] = alg_to_magma(row[j]);
-    }
-}
-
 // ComplexMatrix ComplexMatrix::operator*(const ComplexMatrix &r)
 // {
 	
@@ -94,13 +81,7 @@ void ComplexMatrix::generate_test()
 	magma_to_alg_array();
 }	
 
-void ComplexMatrix::transpose()
-{
-	alglib::complex_2d_array m = alg_array;
-	alglib::cmatrixtranspose(m_n, m_n, m, 0, 0, alg_array, 0, 0);
-	alg_to_magma_array();
-}
-void ComplexMatrix::print_magma(std::string s) const
+void ComplexMatrix::print(std::string s) const
 {
 	std::cout << "MAGMA " << s << std::endl;
 	for (uint i = 0; i < m_n; ++i) {
@@ -156,7 +137,7 @@ void ComplexMatrix::zero()
 void ComplexMatrix::makeLMatrix()
 {
 	for (uint i = 0; i < m_n; ++i) {
-		for (uint j = i + 1; j < m_n; ++j) {
+        for (uint j = 0; j < i; ++j) {
 			magma_array[i * m_n + j].x = 0;
 			magma_array[i * m_n + j].y = 0;
 		}
@@ -165,26 +146,23 @@ void ComplexMatrix::makeLMatrix()
 		e.y = 0;
 		magma_array[i * m_n + i] = e;
 	}
-	//alg_array.setcontent(m_n, m_n, z_array);
 	magma_to_alg_array();
 }
 
 void ComplexMatrix::makeUMatrix()
 {
 	for (uint i = 0; i < m_n; ++i) {
-		for (uint j = 0; j < i; ++j) {
+        for (uint j = i + 1; j < m_n; ++j) {
 			magma_array[i * m_n + j].x = 0;
 			magma_array[i * m_n + j].y = 0;
 		}
 	}
-	//alg_array.setcontent(m_n, m_n, z_array);
 	magma_to_alg_array();
 }
 
 
 void ComplexMatrix::alg_to_magma_array()
 {
-	//uint off = 0;
 	for (uint i = 0; i < m_n; ++i) {
 		const alglib::complex *row = alg_array[i];
 		for (uint j = 0; j < m_n; ++j)
@@ -197,7 +175,6 @@ void ComplexMatrix::magma_to_alg_array()
 	alglib::complex new_alg_array[m_n * m_n];
 	uint off = 0;
 	for (uint i = 0; i < m_n; ++i) {
-		//const magmaDoubleComplex *row = magma_array[i];
 		for (uint j = 0; j < m_n; ++j)
 			new_alg_array[off++] = magma_to_alg(magma_array[j * m_n + i]);
 	}
@@ -209,9 +186,9 @@ ComplexMatrix operator*(const ComplexMatrix &l, const ComplexMatrix &r)
     uint n = l.m_n;
 
     printf("operator* left\n");
-    l.print_magma("left*");
+    l.print("left*");
     printf("operator* right\n");
-    r.print_magma("right*");
+    r.print("right*");
     alglib::complex_2d_array larray = l.alg_array;
     alglib::complex_2d_array rarray = r.alg_array;
     alglib::complex_2d_array mul_matrix;

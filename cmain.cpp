@@ -32,7 +32,7 @@ bool checkLU(const ComplexMatrix matrixBase, ComplexMatrix L,
     //P.setPermutations(permutations.data(), n);
 
     ComplexMatrix LU = L * U;
-    LU.print_magma("L*U");
+    LU.print("L*U");
 
     //Matrix PLU = P * LU;
 
@@ -58,7 +58,7 @@ void func_for_n(uint num, uint gpu)
 	//matrixBase.generate();
 	matrixBase.generate_test();
 
-	matrixBase.print_magma("matrixBase");
+    matrixBase.print("matrixBase");
 
 	 ComplexMatrix matrixRes(matrixBase);
 	// matrixRes.transpose();
@@ -79,7 +79,7 @@ void func_for_n(uint num, uint gpu)
 	double start_time = magma_wtime();
 
 	magma_int_t func_result = magma_zgetrf_m (
-		gpu, m, n, matrixRes.magma_array, lda, ipiv, &info);
+        gpu, m, n, matrixRes.magma_array, lda, ipiv, &info);
 	if (info != 0)
 		printf("INFO");
 	printf("INFO=%d\n", info);
@@ -90,14 +90,14 @@ void func_for_n(uint num, uint gpu)
 
 
 	ComplexMatrix matrixL(matrixRes);
-	matrixL.print_magma("matrixRes");
+    matrixL.print("matrixRes");
 	matrixL.makeLMatrix();
-	matrixL.print_magma("L");
+    matrixL.print("L");
 
 	ComplexMatrix matrixU(matrixRes);
 	//matrixU.print_magma();
 	matrixU.makeUMatrix();
-	matrixU.print_magma("U");
+    matrixU.print("U");
 
 	checkLU(matrixBase, matrixL, matrixU, ipiv);
 }
@@ -112,6 +112,6 @@ int main(int argc, char *argv[])
          it != msizes.end();
          ++it)
     {
-        func_for_n(*it, *it);
+        func_for_n(*it, 1);
     }
 }

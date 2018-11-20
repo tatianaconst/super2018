@@ -27,12 +27,11 @@ public:
 
 
 	
-	void print_magma(std::string s) const;
+    void print(std::string s) const;
 	void print_alg(std::string s) const;
 
 	void generate();
 	void generate_test();
-	void transpose();
 	void copy(const ComplexMatrix &cm);
 
 	void makeLMatrix();
@@ -41,7 +40,6 @@ public:
 	static double m_min;
 	static double m_max;
 	static double m_cond;
-	void set_alg_array(const alglib::complex_2d_array &array);
 	magmaDoubleComplex alg_to_magma(const alglib::complex &n);
 	alglib::complex magma_to_alg(const magmaDoubleComplex &n);
 	void alg_to_magma_array();

@@ -40,15 +40,12 @@ public:
 	static double m_min;
 	static double m_max;
 	static double m_cond;
-	magmaDoubleComplex alg_to_magma(const alglib::complex &n);
-	alglib::complex magma_to_alg(const magmaDoubleComplex &n);
+
 	void alg_to_magma_array();
 	void magma_to_alg_array();
 private:
-	
-
-	
-
+	magmaDoubleComplex alg_to_magma(const alglib::complex &n);
+	alglib::complex magma_to_alg(const magmaDoubleComplex &n);
 	void init(uint n);
 	void m_clean();
 	void zero();

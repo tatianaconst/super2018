@@ -4,25 +4,23 @@ double ComplexMatrix::m_min = 0.1;
 double ComplexMatrix::m_max = 999.9;
 double ComplexMatrix::m_cond = 1.0001;
 
-typedef std::list<uint> ListUint;
-static ListUint matrix_sizes()
-{
-    ListUint sizes;
-    for (uint i = 3; i < 4; ++i)
-    	sizes.push_back(i);
-    // for (uint i = 1000; i <1010; ++i)
-    //     sizes.push_back(i);
-    // for (uint i = 200; i <210; ++i)
-    //     sizes.push_back(i);
-    // for (uint i = 2000; i <2005; ++i)
-    //     sizes.push_back(i);
-    return sizes;
-}
+
+
+#define ABS(x) ((x) > 0 ? (x) : (-(x)))
+
+// typedef std::list<uint> ListUint;
+// static ListUint matrix_sizes()
+// {
+//     ListUint sizes;
+//     for (uint i = 1000; i < 32000; i = i * 1.2)
+//     	sizes.push_back(i);
+//     return sizes;
+// }
+
 
 bool checkLU(const ComplexMatrix matrixBase, ComplexMatrix L,
-	ComplexMatrix U, const int ipiv[])
+	ComplexMatrix U, int ipiv[])
 {
-
 	uint n = matrixBase.m_n;
 
 	//ComplexMatrix P;
@@ -33,21 +31,34 @@ bool checkLU(const ComplexMatrix matrixBase, ComplexMatrix L,
 
     ComplexMatrix LU = L * U;
     LU.print("L*U");
+    //LU.alg_array.transpose();
 
-    //Matrix PLU = P * LU;
+
+    magma_int_t *newpiv = new magma_int_t[n * n];
 
 
-    //const  *array_PLU = PLU.array();
-   // const ValueType *array_M = M.array();
+    //printf("ok3\n");
+	magma_swp2pswp(MagmaNoTrans, n, ipiv, newpiv);
+	//printf("ok4\n");
 
-    // for (uint i = 0; i < n * n; ++i) {
-    //     static double eps = 0.01;
-    //     ValueType delta = ABS(array_PLU[i] - array_M[i]);
-    //     if(delta > eps) {
-    //         std::cout << delta << std::endl;
-    //         return false;
-    //     }
-    // }
+
+
+	for (uint i = 0; i < n; ++i) {
+		//printf("%d\n", newpiv[i]);
+		const alglib::complex *rowLU = LU.alg_array[i];
+		const alglib::complex *rowBase = matrixBase.alg_array[newpiv[i]];
+		for (uint j = 0; j < n; ++j) {
+			double deltaX = ABS(rowLU[j].x - rowBase[j].x);
+			double deltaY = ABS(rowLU[j].y - rowBase[j].y);
+			double eps = 0.001;
+			if ((deltaX > eps) || (deltaY > eps)) {
+				printf("Error: %d %d : %f %f : %f %f\n",i, j, rowBase[j].x, rowLU[j].x, rowBase[j].y, rowLU[j].y);
+				delete[] newpiv;
+				return false;
+			}
+		}
+	}
+	delete[] newpiv;
     return true;
 }
 
@@ -55,63 +66,90 @@ bool checkLU(const ComplexMatrix matrixBase, ComplexMatrix L,
 void func_for_n(uint num, uint gpu)
 {
 	ComplexMatrix matrixBase(num);
-	//matrixBase.generate();
-	matrixBase.generate_test();
+	matrixBase.generate();
+
 
     matrixBase.print("matrixBase");
 
 	 ComplexMatrix matrixRes(matrixBase);
-	// matrixRes.transpose();
-	// matrixRes.print_magma();
+
 
 
 	magma_int_t ngpu = gpu;
 	magma_int_t m = num;
 	magma_int_t n = num;
-	//magmaDoubleComplex *A = matrixRes.magma_array;
 	magma_int_t lda = num;
 	magma_int_t ipiv[num];
 	magma_int_t info; 
 
-	
+	for (uint i = 0; i < 5; ++i) {
+
+		double start_time = magma_wtime();
+
+		magma_int_t func_result = magma_zgetrf_m (
+	        gpu, m, n, matrixRes.magma_array, lda, ipiv, &info);
 
 
-	double start_time = magma_wtime();
+		double fin_time = magma_wtime();
 
-	magma_int_t func_result = magma_zgetrf_m (
-        gpu, m, n, matrixRes.magma_array, lda, ipiv, &info);
-	if (info != 0)
-		printf("INFO");
-	printf("INFO=%d\n", info);
+		printf("###,%d,1,0,%f\n", num, fin_time - start_time);
+	}
 
-	double fin_time = magma_wtime();
-
-	matrixRes.magma_to_alg_array();
+	// matrixRes.magma_to_alg_array();
 
 
-	ComplexMatrix matrixL(matrixRes);
-    matrixL.print("matrixRes");
-	matrixL.makeLMatrix();
-    matrixL.print("L");
+	// ComplexMatrix matrixL(matrixRes);
+ //    matrixL.print("matrixRes");
+	// matrixL.makeLMatrix();
+ //    matrixL.print("L");
 
-	ComplexMatrix matrixU(matrixRes);
-	//matrixU.print_magma();
-	matrixU.makeUMatrix();
-    matrixU.print("U");
+	// ComplexMatrix matrixU(matrixRes);
 
-	checkLU(matrixBase, matrixL, matrixU, ipiv);
+	// matrixU.makeUMatrix();
+ //    matrixU.print("U");
+
+	// if (checkLU(matrixBase, matrixL, matrixU, ipiv))
+	// 	printf("Sucsess\n");
 }
 
 int main(int argc, char *argv[])
 {
-	if (magma_init() == MAGMA_SUCCESS) {
-		printf("Magma_init\n");
+	FILE *sizes;
+	//sizes = fopen("./sizes", "r+");
+	//if (sizes == NULL) printf("FILE\n");
+	int n;
+	//fscanf(sizes,"%d", &n);
+	for (;;) {
+		sizes = fopen("./sizes1", "r");
+		fscanf(sizes,"%d", &n);
+		//printf("%d\n", n);
+		fclose(sizes);
+
+		func_for_n(n, 1);
+
+		sizes = fopen("./sizes1", "w");
+		//printf("%d\n", n);
+		//printf("%d\n", (n*1.2>=32000)?1000:(n*1.2));
+		int k = n*1.2;
+		fprintf(sizes, "%d\n", ((k>=32000)?1000:(k)));
+		fclose(sizes);
+
 	}
-	ListUint msizes = matrix_sizes();
-	for (ListUint::const_iterator it = msizes.begin();
-         it != msizes.end();
-         ++it)
-    {
-        func_for_n(*it, 1);
-    }
+
+	// for (;n < 32000; n = n * 1.2) {
+	// 	func_for_n(n, 1);
+	// 	fprintf(sizes, "%d", n);
+	// }
+
+
+
+	// ListUint msizes = matrix_sizes();
+
+
+	// for (ListUint::const_iterator it = msizes.begin();
+ //         it != msizes.end();
+ //         ++it)
+ //    {
+ //        func_for_n(*it, 1);
+ //    }
 }
